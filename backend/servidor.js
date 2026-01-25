@@ -717,7 +717,7 @@ server.listen(PORT, () => {
     console.log('🔌 WebSocket (Socket.IO) ativo');
     console.log('✅ Todas as rotas e serviços prontos!');
     console.log('');
-    app.listen(3000);
+    /* app.listen(3000); */
 });
 
 // Tratamento de erros não capturados
