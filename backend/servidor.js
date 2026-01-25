@@ -32,7 +32,10 @@ const io = socketIO(server, {
 
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta_super_segura';
+/*
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/streaming_chat';
+*/
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/streaming_chat';
 
 // Middlewares
 app.use(cors());

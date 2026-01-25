@@ -1,6 +1,20 @@
-version: '3.8'
-
 services:
+  # Servidor Backend (Node.js + Express + WebSockets)
+  backend:
+    build: ./backend
+    container_name: backend_server
+    ports:
+      - "3000:3000"
+    environment:
+      # Ligação ao serviço "mongodb" em vez de "localhost"
+      - MONGODB_URI=mongodb://mongodb:27017/streaming_chat
+      - REDIS_HOST=redis
+      - JWT_SECRET=chave_secreta_super_segura
+      - PORT=3000
+    depends_on:
+      - mongodb
+      - redis
+
   # Infraestrutura NoSQL (Principal)
   mongodb:
     image: mongo:latest
@@ -19,4 +33,3 @@ services:
 
 volumes:
   mongodb_data:
-  
