@@ -3,11 +3,11 @@ Projeto de Grupo
 -------------------------------------------------------------------
 Computação distribuída - CTESP_DWM_PL 2025/2026
 
-pasta backend
+pasta backend  
 nom install
 
-pasta frontend
+pasta frontend  
 npm install
 
-pasta raiz
+pasta raiz  
 npm install concurrently --save-dev
