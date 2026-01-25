@@ -2,8 +2,8 @@
 // SERVIDOR BACKEND - SISTEMA DE STREAMING/CHAT EMPRESARIAL
 // Node.js + Express + Socket.IO + MongoDB
 // ============================================
-import express from 'express';
 
+// import express from 'express';
 
 // ============================================
 // DEPENDÊNCIAS E CONFIGURAÇÕES
