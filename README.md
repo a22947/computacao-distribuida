@@ -1,4 +1,4 @@
-Sistema de Streaming/Chat Empresarial
+Sistema de Streaming / Chat Empresarial  
 Projeto de Grupo
 -------------------------------------------------------------------
 Computação distribuída - CTESP_DWM_PL 2025/2026
