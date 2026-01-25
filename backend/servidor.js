@@ -44,12 +44,9 @@ app.use('/uploads', express.static('uploads'));
 // CONEXÃO COM BANCO DE DADOS
 // ============================================
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('✅ MongoDB conectado com sucesso!'))
-.catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
+mongoose.connect(MONGODB_URI) 
+    .then(() => console.log('✅ MongoDB conectado com sucesso!'))
+    .catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
 
 // ============================================
 // SCHEMAS E MODELS
