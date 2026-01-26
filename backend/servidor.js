@@ -22,6 +22,31 @@ const fs = require('fs');
 
 // Configurações
 const app = express();
+
+// --- INICIO CONFIGURAÇÃO SWAGGER ---
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API de Chat Distribuído',
+            version: '1.0.0',
+            description: 'Documentação automática da API de Streaming e Chat Empresarial',
+            contact: {
+                name: "Aluno DWM-PL"
+            }
+        },
+        servers: [
+            { url: 'http://localhost:3000', description: 'Servidor Local (Docker)' }
+        ],
+    },
+    apis: ['./servidor.js'], // Ficheiros onde ele vai procurar as anotações
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+console.log('📄 Swagger disponível em: http://localhost:3000/api-docs');
+// --- FIM CONFIGURAÇÃO SWAGGER ---
+
 const server = http.createServer(app);
 const io = socketIO(server, {
     cors: {
