@@ -20,10 +20,18 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// ============================================
+// Swagger: Requisitos
+// ============================================
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
 // Configurações
 const app = express();
 
-// --- INICIO CONFIGURAÇÃO SWAGGER ---
+// ============================================
+// Swagger: Configuração do Servidor
+// ============================================
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
@@ -45,7 +53,9 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 console.log('📄 Swagger disponível em: http://localhost:3000/api-docs');
-// --- FIM CONFIGURAÇÃO SWAGGER ---
+// ============================================
+// Swagger: Configuração do Servidor
+// ============================================
 
 const server = http.createServer(app);
 const io = socketIO(server, {
@@ -68,7 +78,6 @@ app.use('/uploads', express.static('uploads'));
 // ============================================
 // CONEXÃO COM BANCO DE DADOS
 // ============================================
-
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ MongoDB conectado com sucesso!'))
     .catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
@@ -269,10 +278,10 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ============================================
-// ROTAS DE USUÁRIOS
+// ROTAS DE Utilizadores
 // ============================================
 
-// Listar usuários
+// Lista de Utilizadores
 app.get('/api/users', authenticateToken, async (req, res) => {
     try {
         const users = await User.find()
@@ -286,7 +295,7 @@ app.get('/api/users', authenticateToken, async (req, res) => {
     }
 });
 
-// Buscar usuário por ID
+// Procuar utilizador por ID
 app.get('/api/users/:id', authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.params.id).select('-password');
