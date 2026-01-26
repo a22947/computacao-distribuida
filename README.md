@@ -19,5 +19,5 @@ produção
 -----------------
 tarefas  
 arrancar docker em primeiro lugar
-  parar o docker (para evitar conflitos), docker-compose down
+  parar o docker (para evitar conflitos), docker-compose down  
   levantar e reconstruir, docker-compose up --build -d
