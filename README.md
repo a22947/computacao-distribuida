@@ -18,6 +18,6 @@ npm install concurrently --save-dev
 produção  
 -----------------
 tarefas  
-arrancar docker em primeiro lugar
+arrancar docker em primeiro lugar  
   parar o docker (para evitar conflitos), docker-compose down  
   levantar e reconstruir, docker-compose up --build -d
