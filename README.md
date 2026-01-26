@@ -6,7 +6,7 @@ Computação distribuída - CTESP_DWM_PL 2025/2026
 desenvolvimento  
 -----------------
 pasta backend  
-nom install
+npm install
 
 pasta frontend  
 npm install
