@@ -38,7 +38,7 @@ A base de dados MongoDB na porta 27017.
 
 O serviço Redis na porta 6379.
 
-2. Configurar o Frontend
+### **2. Configurar o Frontend**
 Navega até à pasta frontend e instala as dependências:
 
 Bash
