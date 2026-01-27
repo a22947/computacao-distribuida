@@ -18,7 +18,6 @@ const swaggerJsdoc = require('swagger-jsdoc');
 
 // CONFIGURAÇÕES GERAIS
 const app = express();
-// Garante que a PORT é um número para evitar erros no Node v25
 const PORT = Number(process.env.PORT) || 3000; 
 const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_distribuida';
 // Usa o nome do serviço 'mongodb' para Docker
@@ -66,7 +65,7 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 // BASE DE DADOS (MONGODB)
 // ============================================
-mongoose.connect(MONGODB_URI) // Removidas opções obsoletas que davam erro
+mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ MongoDB conectado com sucesso!'))
     .catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
 
@@ -146,9 +145,12 @@ const authenticateToken = (req, res, next) => {
  * schema:
  * type: object
  * properties:
- * name: { type: string }
- * email: { type: string }
- * password: { type: string }
+ * name:
+ * type: string
+ * email:
+ * type: string
+ * password:
+ * type: string
  * responses:
  * 201:
  * description: Utilizador criado
@@ -182,8 +184,10 @@ app.post('/api/auth/register', async (req, res) => {
  * schema:
  * type: object
  * properties:
- * email: { type: string }
- * password: { type: string }
+ * email:
+ * type: string
+ * password:
+ * type: string
  * responses:
  * 200:
  * description: Sucesso
@@ -210,10 +214,45 @@ app.post('/api/auth/login', async (req, res) => {
 // ROTAS: CANAIS
 // ============================================
 
+/**
+ * @swagger
+ * /api/channels:
+ * get:
+ * summary: Lista todos os canais disponíveis
+ * tags: [Canais]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: Lista de canais obtida com sucesso
+ */
+
 app.get('/api/channels', authenticateToken, async (req, res) => {
     const channels = await Channel.find().populate('createdBy', 'name');
     res.json({ channels });
 });
+
+/**
+ * @swagger
+ * /api/channels:
+ * post:
+ * summary: Cria um novo canal de chat
+ * tags: [Canais]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * name: { type: string }
+ * description: { type: string }
+ * responses:
+ * 201:
+ * description: Canal criado
+ */
 
 app.post('/api/channels', authenticateToken, async (req, res) => {
     try {
@@ -230,6 +269,24 @@ app.post('/api/channels', authenticateToken, async (req, res) => {
 // ROTAS: MENSAGENS
 // ============================================
 
+/**
+ * @swagger
+ * /api/messages/{channelId}:
+ * get:
+ * summary: Obtém o histórico de mensagens de um canal
+ * tags: [Mensagens]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: channelId
+ * required: true
+ * schema: { type: string }
+ * responses:
+ * 200:
+ * description: Lista de mensagens
+ */
+
 app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
     try {
         const messages = await Message.find({ channel: req.params.channelId })
@@ -241,6 +298,8 @@ app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erro ao listar mensagens' });
     }
 });
+
+
 
 app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
     try {
@@ -264,6 +323,21 @@ app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
 // ROTAS: STREAMS
 // ============================================
 
+/**
+ * @swagger
+ * /api/streams:
+ * get:
+ * summary: Lista as transmissões (streams)
+ * tags: [Streams]
+ * parameters:
+ * - in: query
+ * name: status
+ * schema: { type: string, enum: [scheduled, live, ended] }
+ * responses:
+ * 200:
+ * description: Sucesso
+ */
+
 // api/streams
 app.get('/api/streams', authenticateToken, async (req, res) => {
     try {
@@ -275,6 +349,24 @@ app.get('/api/streams', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Erro ao listar streams' });
     }
 });
+
+/**
+ * @swagger
+ * /api/streams/{id}/start:
+ * post:
+ * summary: Inicia uma transmissão (Apenas o Host)
+ * tags: [Streams]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema: { type: string }
+ * responses:
+ * 200:
+ * description: Stream iniciada
+ */
 
 // api/streams
 app.post('/api/streams', authenticateToken, async (req, res) => {
