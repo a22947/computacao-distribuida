@@ -331,6 +331,51 @@ app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
 });
 
 // ============================================
+// ROTAS: UTILIZADORES
+// ============================================
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Lista todos os utilizadores registados
+ *     tags: [Utilizadores]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de utilizadores retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ */
+
+app.get('/api/users', authenticateToken, async (req, res) => {
+  try {
+    // O .select('-password') garante que a password NÃO é enviada para o frontend
+    const users = await User.find().select('-password'); 
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar utilizadores' });
+  }
+});
+
+// ============================================
 // SOCKET.IO EVENTOS
 // ============================================
 io.on('connection', (socket) => {
