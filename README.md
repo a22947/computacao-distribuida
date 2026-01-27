@@ -63,7 +63,7 @@ Navega até à pasta `frontend` e instala as dependências:
 
 
 ```
-cd frontend<br>
+cd frontend  
 npm install
 ```
 
