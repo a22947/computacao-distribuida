@@ -64,5 +64,59 @@ Chat Distribuído: Abre duas janelas do navegador (uma normal e outra incógnita
 
 /frontend: Aplicação React, estilos CSS e lógica de comunicação com o socket.
 
-docker-compose.yml: Ficheiro de orquestração de todos os serviços.
+docker-compose.yml: Ficheiro de orquestração de todos os serviços.Este comando irá iniciar os serviços:
+
+| Serviço | Endereço/Porta |
+| :--- | :--- |
+| **Servidor Node.js** | [http://localhost:3000](http://localhost:3000) |
+| **MongoDB** | Porta `27017` |
+| **Redis** | Porta `6379` |
+
+### 2. Configurar o Frontend
+Navega até à pasta `frontend` e instala as dependências:
+
+```bash
+cd frontend
+npm install
+
+Inicia o servidor de desenvolvimento:
+
+```bash
+npm run dev
+
+# Frontend
+
+O frontend ficará disponível em http://localhost:5173.
+
+# 📖 Como Utilizar
+
+1. **Documentação da API**: Acede a `http://localhost:3000/api-docs` para ver e testar todas as rotas disponíveis via Swagger.
+2. **Registo**: Cria uma conta através da rota POST `/api/auth/register` no Swagger.
+3. **Login**: Acede à interface web (`http://localhost:5173`), faz login e começa a trocar mensagens em tempo real.
+4. **Chat Distribuído**: Abre duas janelas do navegador (uma normal e outra incógnita) com utilizadores diferentes para testar a entrega instantânea de mensagens via Socket.IO.
+
+## 📂 Estrutura do Repositório
+
+* `/backend`: Código fonte do servidor, configurações do Docker e modelos de dados.
+* `/frontend`: Aplicação React, estilos CSS e lógica de comunicação com o socket.
+* `docker-compose.yml`: Ficheiro de orquestração de todos os serviços.
+
+## 🔮 Melhorias Futuras & Escalabilidade
+
+Para elevar o sistema a um nível de produção global, sugerem-se as seguintes implementações:
+
+* **Redis Adapter**: Utilizar Redis Pub/Sub para sincronizar múltiplos nós do servidor Node.js, permitindo escalabilidade horizontal do Socket.IO.
+* **Orquestração com Kubernetes**: Implementar auto-scaling e self-healing dos contentores para suportar picos de tráfego.
+* **Alta Disponibilidade (Replica Sets)**: Configurar o MongoDB em modo Replica Set para evitar perda de dados em caso de falha de um nó.
+* **WebRTC**: Implementar streaming de vídeo real ponto-a-ponto (P2P) para reduzir a latência e carga no servidor.
+
+## ✍️ Conclusão Pessoal
+
+"O maior desafio técnico deste projeto foi a integração e orquestração de múltiplos serviços distribuídos. A correção da sintaxe YAML no Swagger e a garantia de que o Frontend (React) comunicava corretamente com o Backend (Node.js) dentro de uma rede isolada pelo Docker foram etapas cruciais que consolidaram o meu entendimento sobre autenticação JWT e eventos em tempo real com Socket.IO."
+
+
+
+## ✍️ Conclusão Pessoal
+
+> "O maior desafio técnico deste projeto foi a **integração e orquestração de múltiplos serviços distribuídos**. A correção da sintaxe **YAML no Swagger** e a garantia de que o **Frontend (React)** comunicava corretamente com o **Backend (Node.js)** dentro de uma rede isolada pelo **Docker** foram etapas cruciais que consolidaram o meu entendimento sobre **autenticação JWT** e eventos em tempo real com **Socket.io**."
 
