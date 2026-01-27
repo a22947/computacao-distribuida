@@ -113,10 +113,3 @@ Para elevar o sistema a um nível de produção global, sugerem-se as seguintes 
 ## ✍️ Conclusão Pessoal
 
 "O maior desafio técnico deste projeto foi a integração e orquestração de múltiplos serviços distribuídos. A correção da sintaxe YAML no Swagger e a garantia de que o Frontend (React) comunicava corretamente com o Backend (Node.js) dentro de uma rede isolada pelo Docker foram etapas cruciais que consolidaram o meu entendimento sobre autenticação JWT e eventos em tempo real com Socket.IO."
-
-
-
-## ✍️ Conclusão Pessoal
-
-> "O maior desafio técnico deste projeto foi a **integração e orquestração de múltiplos serviços distribuídos**. A correção da sintaxe **YAML no Swagger** e a garantia de que o **Frontend (React)** comunicava corretamente com o **Backend (Node.js)** dentro de uma rede isolada pelo **Docker** foram etapas cruciais que consolidaram o meu entendimento sobre **autenticação JWT** e eventos em tempo real com **Socket.io**."
-
