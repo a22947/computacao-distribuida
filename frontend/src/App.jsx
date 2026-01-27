@@ -7,174 +7,244 @@ const API_URL = 'http://localhost:3000/api';
 const SOCKET_URL = 'http://localhost:3000';
 
 function App() {
+  // --- ESTADOS ---
   const [user, setUser] = useState(null);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [currentChannel, setCurrentChannel] = useState('geral');
   
-  // --- NOVOS ESTADOS PARA MENSAGENS REAIS ---
+  // Canais e Mensagens
+  const [channels, setChannels] = useState([]); // Lista de canais vinda da BD
+  const [currentChannel, setCurrentChannel] = useState(null); // ID do canal selecionado
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  
   const socketRef = useRef();
 
-  // 1. Recuperar sessão e configurar Socket
+  // --- 1. SETUP INICIAL ---
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (savedUser && token) {
       setUser(JSON.parse(savedUser));
       setupSocket(token);
+      fetchChannels(token); // Carrega os canais ao iniciar
     }
   }, []);
 
-  // 2. Lógica de WebSockets (Mensagens em tempo real)
-  const setupSocket = (token) => {
-    socketRef.current = io(SOCKET_URL);
-    
-    socketRef.current.on('connect', () => {
-      socketRef.current.emit('authenticate', token);
-      socketRef.current.emit('join_channel', currentChannel);
-    });
-
-    // Ouvir novas mensagens vindas do servidor
-    socketRef.current.on('new_message', (data) => {
-      setMessages((prev) => [...prev, data.message]);
-    });
-  };
-
-  // 3. Carregar Histórico do MongoDB quando mudar de canal
+  // --- 2. QUANDO MUDA O CANAL ---
   useEffect(() => {
-    if (user && currentPage === 'chat') {
-      fetchMessages();
+    if (currentChannel && user) {
+      fetchMessages(currentChannel);
       if (socketRef.current) {
         socketRef.current.emit('join_channel', currentChannel);
       }
     }
-  }, [currentChannel, currentPage]);
+  }, [currentChannel]);
 
-  const fetchMessages = async () => {
+  // --- FUNÇÕES DE API ---
+  const fetchChannels = async (tokenOverride) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`${API_URL}/messages/${currentChannel}`, {
+      const token = tokenOverride || localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/channels`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMessages(res.data.messages);
-    } catch (err) {
-      console.error("Erro ao carregar mensagens:", err);
+      setChannels(response.data.channels);
+
+      // Se não houver canal selecionado e existirem canais, seleciona o primeiro
+      if (response.data.channels.length > 0 && !currentChannel) {
+        setCurrentChannel(response.data.channels[0]._id);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar canais", error);
     }
   };
 
-  // 4. Enviar Mensagem Real para o Backend
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
+  const fetchMessages = async (channelId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/messages/${currentChannel}`, 
-        { text: newMessage }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setNewMessage(''); // Limpa o input, o Socket.io tratará de exibir a mensagem
-    } catch (err) {
-      alert("Erro ao enviar mensagem");
+      const response = await axios.get(`${API_URL}/messages/${channelId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessages(response.data.messages);
+    } catch (error) {
+      console.error("Erro ao buscar mensagens", error);
     }
   };
 
-  // --- LÓGICA DE LOGIN ---
+  // --- WEBSOCKETS ---
+  const setupSocket = (token) => {
+    if (socketRef.current) return; // Evita conexões duplicadas
+
+    socketRef.current = io(SOCKET_URL);
+    
+    socketRef.current.on('connect', () => {
+      socketRef.current.emit('authenticate', token);
+    });
+
+    // Ouve novas mensagens
+    socketRef.current.on('new_message', (data) => {
+      // Só adiciona se a mensagem for do canal que estamos a ver
+      if (data.message.channel === currentChannel || data.message.channel._id === currentChannel) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+    });
+
+    // Ouve novos canais criados (Tempo Real!)
+    socketRef.current.on('channel_created', (data) => {
+      setChannels((prev) => [...prev, data.channel]);
+    });
+  };
+
+  // --- LOGIN / LOGOUT ---
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/auth/login`, loginData);
-      const { token, user: userData } = response.data;
+      const { token, user } = response.data;
+      
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setUser(user);
       setupSocket(token);
-    } catch (err) {
-      alert(err.response?.data?.error || 'Erro no login');
+      fetchChannels(token);
+    } catch (error) {
+      alert('Login falhou: Verifique as credenciais');
     }
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     if (socketRef.current) socketRef.current.disconnect();
+    socketRef.current = null;
+    setUser(null);
+    setChannels([]);
+    setMessages([]);
   };
 
+  // --- ENVIAR MENSAGEM ---
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !currentChannel) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/messages/${currentChannel}`, {
+        text: newMessage
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewMessage('');
+    } catch (error) {
+      console.error("Erro ao enviar mensagem", error);
+    }
+  };
+
+  // --- RENDER ---
   if (!user) {
     return (
-      <div className="auth-container" style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
-        <div className="auth-card" style={{background: 'white', padding: '40px', borderRadius: '15px', width: '100%', maxWidth: '400px'}}>
-          <h2 style={{textAlign: 'center', marginBottom: '20px'}}>🎥 StreamPro Login</h2>
-          <form onSubmit={handleLogin}>
-            <input type="email" placeholder="Email" className="input-auth" onChange={(e) => setLoginData({...loginData, email: e.target.value})} required />
-            <input type="password" placeholder="Password" className="input-auth" onChange={(e) => setLoginData({...loginData, password: e.target.value})} required />
-            <button type="submit" className="btn btn-primary" style={{width: '100%', marginTop: '10px'}}>Entrar</button>
-          </form>
-        </div>
+      <div className="login-container">
+        <form className="login-form" onSubmit={handleLogin}>
+          <h2>StreamPro Login</h2>
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={loginData.email}
+            onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+          />
+          <input 
+            type="password" 
+            placeholder="Password"
+            value={loginData.password}
+            onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+          />
+          <button type="submit">Entrar</button>
+        </form>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <header>
+    <div className="app-container">
+      {/* HEADER */}
+      <header className="main-header">
         <div className="logo">🎥 StreamPro Enterprise</div>
-        <nav className="nav-menu">
-          <button className={`nav-btn ${currentPage === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentPage('dashboard')}>Dashboard</button>
-          <button className={`nav-btn ${currentPage === 'chat' ? 'active' : ''}`} onClick={() => setCurrentPage('chat')}>Chat</button>
-          <button className="nav-btn" onClick={handleLogout} style={{color: '#ef4444'}}>Sair</button>
+        <nav>
+          <button onClick={() => setCurrentPage('dashboard')}>Dashboard</button>
+          <button onClick={() => setCurrentPage('chat')} className="active">Chat</button>
         </nav>
+        <div className="user-info">
+          <span>Olá, {user.name}</span>
+          <button onClick={handleLogout} className="btn-logout">Sair</button>
+        </div>
       </header>
 
-      <div className="content">
+      <div className="content-area">
+        {/* DASHBOARD PLACEHOLDER */}
         {currentPage === 'dashboard' && (
-          <div className="page active">
-            <h1 className="section-title">Painel de Controlo</h1>
-            <div className="stats-grid">
-              <div className="stat-card"><h3>Utilizador Atual</h3><div className="value">{user.name}</div></div>
-              <div className="stat-card"><h3>Estado</h3><div className="value">Online 🟢</div></div>
-            </div>
+          <div className="dashboard-view">
+            <h1>Bem-vindo ao StreamPro</h1>
+            <p>Selecione a aba Chat para comunicar com a equipa.</p>
           </div>
         )}
 
+        {/* CHAT VIEW */}
         {currentPage === 'chat' && (
-          <div className="page active">
-            <div className="chat-page-container">
-              <div className="channels-sidebar">
-                <h3>Canais</h3>
-                {['geral', 'tech', 'vendas'].map(ch => (
-                  <div key={ch} className={`channel-item ${currentChannel === ch ? 'active' : ''}`} onClick={() => setCurrentChannel(ch)}># {ch}</div>
+          <div className="chat-layout">
+            
+            {/* BARRA LATERAL (CANAIS) */}
+            <div className="channels-sidebar">
+              <h3>Canais</h3>
+              <div className="channels-list">
+                {channels.map((channel) => (
+                  <div 
+                    key={channel._id} 
+                    className={`channel-item ${currentChannel === channel._id ? 'active' : ''}`}
+                    onClick={() => setCurrentChannel(channel._id)}
+                  >
+                    <span className="hash">#</span> 
+                    {channel.name}
+                    {channel.type === 'private' && <span className="lock">🔒</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ÁREA DE MENSAGENS */}
+            <div className="chat-container">
+              <div className="chat-header">
+                {channels.find(c => c._id === currentChannel)?.name || 'Selecione um canal'}
+              </div>
+              
+              <div className="chat-messages">
+                {messages.map((msg, index) => (
+                  <div className={`message ${msg.user?._id === user.id ? 'my-message' : ''}`} key={index}>
+                    <div className="message-avatar">
+                      {msg.user?.name?.charAt(0) || '?'}
+                    </div>
+                    <div className="message-content">
+                      <div className="message-header">
+                        <span className="message-user">{msg.user?.name || 'Desconhecido'}</span>
+                        <span className="message-time">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                      <div className="message-text">{msg.text}</div>
+                    </div>
+                  </div>
                 ))}
               </div>
 
-              <div className="chat-container">
-                <div className="chat-header"># {currentChannel}</div>
-                <div className="chat-messages">
-                  {messages.map((msg, index) => (
-                    <div className="message" key={index}>
-                      <div className="message-avatar">{msg.user?.name?.charAt(0) || 'U'}</div>
-                      <div className="message-content">
-                        <div className="message-header">
-                          <span className="message-user">{msg.user?.name || 'Utilizador'}</span>
-                          <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="message-text">{msg.text}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <form className="chat-input" onSubmit={handleSendMessage}>
-                  <input 
-                    type="text" 
-                    placeholder="Digite sua mensagem..." 
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                  />
-                  <button type="submit" className="btn btn-primary">Enviar</button>
-                </form>
-              </div>
+              <form className="chat-input" onSubmit={handleSendMessage}>
+                <input 
+                  type="text" 
+                  placeholder={`Mensagem para #${channels.find(c => c._id === currentChannel)?.name || '...'}`}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <button type="submit">Enviar</button>
+              </form>
             </div>
           </div>
         )}
