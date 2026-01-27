@@ -150,7 +150,7 @@ const authenticateToken = (req, res, next) => {
  * type: string
  * responses:
  * 201:
- * description: Utilizador criado
+ * description: Utilizador criado com sucesso
  */
 app.post('/api/auth/register', async (req, res) => {
   try {
