@@ -12,7 +12,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 
-// SWAGGER (Imports que faltavam)
+// SWAGGER (Imports)
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -20,30 +20,29 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const app = express();
 const PORT = Number(process.env.PORT) || 3000; 
 const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_distribuida';
-// Usa o nome do serviço 'mongodb' para Docker
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/streaming_chat'; 
 
 // ============================================
 // CONFIGURAÇÃO SWAGGER (Documentação)
 // ============================================
 const swaggerOptions = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'API de Chat Distribuído',
-            version: '1.0.0',
-            description: 'API para Sistema de Streaming e Chat Empresarial',
-            contact: { name: "Aluno DWM-PL" }
-        },
-        servers: [{ url: 'http://localhost:3000', description: 'Servidor Docker' }],
-        components: {
-            securitySchemes: {
-                bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
-            }
-        },
-        security: [{ bearerAuth: [] }]
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API de Chat Distribuído',
+      version: '1.0.0',
+      description: 'API para Sistema de Streaming e Chat Empresarial',
+      contact: { name: "Aluno DWM-PL" }
     },
-    apis: ['./servidor.js'],
+    servers: [{ url: 'http://localhost:3000', description: 'Servidor Docker' }],
+    components: {
+      securitySchemes: {
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
+      }
+    },
+    security: [{ bearerAuth: [] }]
+  },
+  apis: ['./servidor.js'],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
@@ -54,10 +53,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // ============================================
 const server = http.createServer(app);
 const io = socketIO(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] }
+  cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Middlewares Express
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -66,50 +64,49 @@ app.use(express.urlencoded({ extended: true }));
 // BASE DE DADOS (MONGODB)
 // ============================================
 mongoose.connect(MONGODB_URI)
-    .then(() => console.log('✅ MongoDB conectado com sucesso!'))
-    .catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
+  .then(() => console.log('✅ MongoDB conectado com sucesso!'))
+  .catch(err => console.error('❌ Erro ao conectar MongoDB:', err));
 
 // ============================================
 // SCHEMAS E MODELS
 // ============================================
-
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['Admin', 'Moderador', 'utilizador'], default: 'utilizador' },
-    status: { type: String, default: 'offline' },
-    createdAt: { type: Date, default: Date.now }
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['Admin', 'Moderador', 'utilizador'], default: 'utilizador' },
+  status: { type: String, default: 'offline' },
+  createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
 
 const channelSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    description: String,
-    type: { type: String, default: 'public' },
-    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  name: { type: String, required: true, unique: true },
+  description: String,
+  type: { type: String, default: 'public' },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
 const Channel = mongoose.model('Channel', channelSchema);
 
 const messageSchema = new mongoose.Schema({
-    channel: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel', required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    text: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
+  channel: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 const Message = mongoose.model('Message', messageSchema);
 
 const streamSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    description: String,
-    host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    status: { type: String, enum: ['scheduled', 'live', 'ended'], default: 'scheduled' },
-    scheduledDate: Date,
-    startedAt: Date,
-    endedAt: Date,
-    viewers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    isPublic: { type: Boolean, default: true }
+  title: { type: String, required: true },
+  description: String,
+  host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['scheduled', 'live', 'ended'], default: 'scheduled' },
+  scheduledDate: Date,
+  startedAt: Date,
+  endedAt: Date,
+  viewers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  isPublic: { type: Boolean, default: true }
 });
 const Stream = mongoose.model('Stream', streamSchema);
 
@@ -117,15 +114,15 @@ const Stream = mongoose.model('Stream', streamSchema);
 // MIDDLEWARE AUTENTICAÇÃO
 // ============================================
 const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Token necessário' });
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Token necessário' });
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Token inválido' });
-        req.user = user;
-        next();
-    });
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Token inválido' });
+    req.user = user;
+    next();
+  });
 };
 
 // ============================================
@@ -156,19 +153,19 @@ const authenticateToken = (req, res, next) => {
  * description: Utilizador criado
  */
 app.post('/api/auth/register', async (req, res) => {
-    try {
-        const { name, email, password, role } = req.body;
-        if (await User.findOne({ email })) return res.status(400).json({ error: 'Email já existe' });
+  try {
+    const { name, email, password, role } = req.body;
+    if (await User.findOne({ email })) return res.status(400).json({ error: 'Email já existe' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = new User({ name, email, password: hashedPassword, role: role || 'utilizador' });
-        await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ name, email, password: hashedPassword, role: role || 'utilizador' });
+    await user.save();
 
-        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-        res.status(201).json({ message: 'Registado com sucesso', token, user: { id: user._id, name: user.name, email: user.email } });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro no registo' });
-    }
+    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    res.status(201).json({ message: 'Registado com sucesso', token, user: { id: user._id, name: user.name, email: user.email } });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro no registo' });
+  }
 });
 
 /**
@@ -193,274 +190,178 @@ app.post('/api/auth/register', async (req, res) => {
  * description: Sucesso
  */
 app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: 'Credenciais inválidas' });
-        }
-
-        user.status = 'online';
-        await user.save();
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-        
-        res.json({ message: 'Login OK', token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro no login' });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
+
+    user.status = 'online';
+    await user.save();
+    const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    
+    res.json({ message: 'Login OK', token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro no login' });
+  }
 });
 
 // ============================================
 // ROTAS: CANAIS
 // ============================================
 
-/**
- * @swagger
- * /api/channels:
- * get:
- * summary: Lista todos os canais disponíveis
- * tags: [Canais]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: Lista de canais obtida com sucesso
- */
-
 app.get('/api/channels', authenticateToken, async (req, res) => {
-    const channels = await Channel.find().populate('createdBy', 'name');
-    res.json({ channels });
+  const channels = await Channel.find().populate('createdBy', 'name');
+  res.json({ channels });
 });
 
-/**
- * @swagger
- * /api/channels:
- * post:
- * summary: Cria um novo canal de chat
- * tags: [Canais]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * name: { type: string }
- * description: { type: string }
- * responses:
- * 201:
- * description: Canal criado
- */
-
 app.post('/api/channels', authenticateToken, async (req, res) => {
-    try {
-        const channel = new Channel({ ...req.body, createdBy: req.user.id, members: [req.user.id] });
-        await channel.save();
-        io.emit('channel_created', { channel });
-        res.status(201).json({ channel });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao criar canal' });
-    }
+  try {
+    const channel = new Channel({ ...req.body, createdBy: req.user.id, members: [req.user.id] });
+    await channel.save();
+    io.emit('channel_created', { channel });
+    res.status(201).json({ channel });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar canal' });
+  }
 });
 
 // ============================================
 // ROTAS: MENSAGENS
 // ============================================
 
-/**
- * @swagger
- * /api/messages/{channelId}:
- * get:
- * summary: Obtém o histórico de mensagens de um canal
- * tags: [Mensagens]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: channelId
- * required: true
- * schema: { type: string }
- * responses:
- * 200:
- * description: Lista de mensagens
- */
-
 app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
-    try {
-        const messages = await Message.find({ channel: req.params.channelId })
-            .populate('user', 'name')
-            .sort({ createdAt: -1 })
-            .limit(50);
-        res.json({ messages: messages.reverse() });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar mensagens' });
-    }
+  try {
+    const messages = await Message.find({ channel: req.params.channelId })
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    res.json({ messages: messages.reverse() });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar mensagens' });
+  }
 });
 
-
-
 app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
-    try {
-        const message = new Message({
-            channel: req.params.channelId,
-            user: req.user.id,
-            text: req.body.text
-        });
-        await message.save();
-        await message.populate('user', 'name');
-
-        // Envia para a "sala" específica do canal via Socket.io
-        io.to(req.params.channelId).emit('new_message', { message });
-        res.status(201).json({ message });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao enviar mensagem' });
-    }
+  try {
+    const message = new Message({
+      channel: req.params.channelId,
+      user: req.user.id,
+      text: req.body.text
+    });
+    await message.save();
+    await message.populate('user', 'name');
+    io.to(req.params.channelId).emit('new_message', { message });
+    res.status(201).json({ message });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao enviar mensagem' });
+  }
 });
 
 // ============================================
 // ROTAS: STREAMS
 // ============================================
 
-/**
- * @swagger
- * /api/streams:
- * get:
- * summary: Lista as transmissões (streams)
- * tags: [Streams]
- * parameters:
- * - in: query
- * name: status
- * schema: { type: string, enum: [scheduled, live, ended] }
- * responses:
- * 200:
- * description: Sucesso
- */
-
-// api/streams
 app.get('/api/streams', authenticateToken, async (req, res) => {
-    try {
-        const streams = await Stream.find(req.query.status ? { status: req.query.status } : {})
-            .populate('host', 'name')
-            .sort({ scheduledDate: -1 });
-        res.json({ streams });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao listar streams' });
-    }
+  try {
+    const streams = await Stream.find(req.query.status ? { status: req.query.status } : {})
+      .populate('host', 'name')
+      .sort({ scheduledDate: -1 });
+    res.json({ streams });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar streams' });
+  }
 });
 
-/**
- * @swagger
- * /api/streams/{id}/start:
- * post:
- * summary: Inicia uma transmissão (Apenas o Host)
- * tags: [Streams]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: id
- * required: true
- * schema: { type: string }
- * responses:
- * 200:
- * description: Stream iniciada
- */
-
-// api/streams
 app.post('/api/streams', authenticateToken, async (req, res) => {
-    try {
-        const stream = new Stream({ ...req.body, host: req.user.id });
-        await stream.save();
-        await stream.populate('host', 'name');
-        io.emit('stream_scheduled', { stream });
-        res.status(201).json({ stream });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao criar stream' });
-    }
+  try {
+    const stream = new Stream({ ...req.body, host: req.user.id });
+    await stream.save();
+    await stream.populate('host', 'name');
+    io.emit('stream_scheduled', { stream });
+    res.status(201).json({ stream });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar stream' });
+  }
 });
 
-// api/streams/:id/start
 app.post('/api/streams/:id/start', authenticateToken, async (req, res) => {
-    try {
-        const stream = await Stream.findById(req.params.id);
-        if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
-        if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
+    if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
 
-        stream.status = 'live';
-        stream.startedAt = new Date();
-        await stream.save();
+    stream.status = 'live';
+    stream.startedAt = new Date();
+    await stream.save();
 
-        io.emit('stream_started', { streamId: stream._id, stream });
-        res.json({ message: 'Stream iniciada', stream });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao iniciar stream' });
-    }
+    io.emit('stream_started', { streamId: stream._id, stream });
+    res.json({ message: 'Stream iniciada', stream });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao iniciar stream' });
+  }
 });
 
-// api/streams/:id/end
 app.post('/api/streams/:id/end', authenticateToken, async (req, res) => {
-    try {
-        const stream = await Stream.findById(req.params.id);
-        if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
-        if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
+    if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
 
-        stream.status = 'ended';
-        stream.endedAt = new Date();
-        await stream.save();
+    stream.status = 'ended';
+    stream.endedAt = new Date();
+    await stream.save();
 
-        io.emit('stream_ended', { streamId: stream._id });
-        res.json({ message: 'Stream encerrada', stream });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao encerrar' });
-    }
+    io.emit('stream_ended', { streamId: stream._id });
+    res.json({ message: 'Stream encerrada', stream });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao encerrar' });
+  }
 });
 
-// api/streams/:id/join
 app.post('/api/streams/:id/join', authenticateToken, async (req, res) => {
-    try {
-        const stream = await Stream.findById(req.params.id);
-        if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
 
-        if (!stream.viewers.includes(req.user.id)) {
-            stream.viewers.push(req.user.id);
-            await stream.save();
-        }
-        
-        io.to(req.params.id).emit('viewer_joined', { streamId: stream._id, viewers: stream.viewers.length });
-        res.json({ message: 'Entrou na stream', stream });
-    } catch (error) {
-        res.status(500).json({ error: 'Erro ao entrar' });
+    if (!stream.viewers.includes(req.user.id)) {
+      stream.viewers.push(req.user.id);
+      await stream.save();
     }
+    
+    io.to(req.params.id).emit('viewer_joined', { streamId: stream._id, viewers: stream.viewers.length });
+    res.json({ message: 'Entrou na stream', stream });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao entrar' });
+  }
 });
 
 // ============================================
 // SOCKET.IO EVENTOS
 // ============================================
 io.on('connection', (socket) => {
-    console.log('🔌 Cliente conectado:', socket.id);
+  console.log('🔌 Cliente conectado:', socket.id);
 
-    socket.on('authenticate', (token) => {
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            socket.userId = decoded.id;
-            socket.emit('authenticated', { success: true });
-        } catch (e) {
-            socket.emit('auth_error');
-        }
-    });
+  socket.on('authenticate', (token) => {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      socket.userId = decoded.id;
+      socket.emit('authenticated', { success: true });
+    } catch (e) {
+      socket.emit('auth_error');
+    }
+  });
 
-    // Função que permite separar mensagens por canais (Salas)
-    socket.on('join_channel', (id) => { socket.join(id); });
-    socket.on('join_stream', (id) => { socket.join(id); });
+  socket.on('join_channel', (id) => { socket.join(id); });
+  socket.on('join_stream', (id) => { socket.join(id); });
 });
 
 // ============================================
-// ARRANQUE DO SERVIDOR
+// ARRANQUE
 // ============================================
 server.listen(PORT, () => {
-    console.log('\n🚀 SERVIDOR PRONTO!');
-    console.log(`📡 Porta: ${PORT}`);
-    console.log(`📄 Swagger: http://localhost:${PORT}/api-docs\n`);
+  console.log('\n🚀 SERVIDOR PRONTO!');
+  console.log(`📡 Porta: ${PORT}`);
+  console.log(`📄 Swagger: http://localhost:${PORT}/api-docs\n`);
 });
