@@ -22,3 +22,8 @@ arrancar docker em primeiro lugar<br>
   parar o docker (para evitar conflitos), docker-compose down<br>
   levantar e reconstruir, docker-compose up --build -d<br>
   verificar estado dos contentores, docker ps<br>
+
+swagger
+-----------------
+http://localhost:3000/api-docs/<br>
+
