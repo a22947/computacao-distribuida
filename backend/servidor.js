@@ -10,20 +10,19 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const path = require('path');
 
-// SWAGGER (Imports)
+// SWAGGER
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 
 // CONFIGURAÇÕES GERAIS
 const app = express();
-const PORT = Number(process.env.PORT) || 3000; 
+const PORT = Number(process.env.PORT) || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_distribuida';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/streaming_chat'; 
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/streaming_chat';
 
 // ============================================
-// CONFIGURAÇÃO SWAGGER (Documentação)
+// CONFIGURAÇÃO SWAGGER
 // ============================================
 const swaggerOptions = {
   definition: {
@@ -39,8 +38,7 @@ const swaggerOptions = {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
       }
-    },
-    security: [{ bearerAuth: [] }]
+    }
   },
   apis: ['./servidor.js'],
 };
@@ -132,25 +130,23 @@ const authenticateToken = (req, res, next) => {
 /**
  * @swagger
  * /api/auth/register:
- * post:
- * summary: Regista um novo utilizador
- * tags: [Autenticação]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * name:
- * type: string
- * email:
- * type: string
- * password:
- * type: string
- * responses:
- * 201:
- * description: Utilizador criado com sucesso
+ *   post:
+ *     summary: Regista um novo utilizador
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string }
+ *               password: { type: string }
+ *               role: { type: string }
+ *     responses:
+ *       201:
+ *         description: Utilizador criado com sucesso
  */
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -171,23 +167,21 @@ app.post('/api/auth/register', async (req, res) => {
 /**
  * @swagger
  * /api/auth/login:
- * post:
- * summary: Login de utilizador
- * tags: [Autenticação]
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * email:
- * type: string
- * password:
- * type: string
- * responses:
- * 200:
- * description: Login efetuado com sucesso
+ *   post:
+ *     summary: Login de utilizador
+ *     tags: [Autenticação]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       200:
+ *         description: Login efetuado com sucesso
  */
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -200,7 +194,7 @@ app.post('/api/auth/login', async (req, res) => {
     user.status = 'online';
     await user.save();
     const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    
+
     res.json({ message: 'Login OK', token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     res.status(500).json({ error: 'Erro no login' });
@@ -214,14 +208,14 @@ app.post('/api/auth/login', async (req, res) => {
 /**
  * @swagger
  * /api/channels:
- * get:
- * summary: Lista todos os canais
- * tags: [Canais]
- * security:
- * - bearerAuth: []
- * responses:
- * 200:
- * description: Lista de canais obtida
+ *   get:
+ *     summary: Lista todos os canais
+ *     tags: [Canais]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de canais obtida
  */
 app.get('/api/channels', authenticateToken, async (req, res) => {
   const channels = await Channel.find().populate('createdBy', 'name');
@@ -231,25 +225,23 @@ app.get('/api/channels', authenticateToken, async (req, res) => {
 /**
  * @swagger
  * /api/channels:
- * post:
- * summary: Cria um novo canal
- * tags: [Canais]
- * security:
- * - bearerAuth: []
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * name:
- * type: string
- * description:
- * type: string
- * responses:
- * 201:
- * description: Canal criado
+ *   post:
+ *     summary: Cria um novo canal
+ *     tags: [Canais]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               description: { type: string }
+ *     responses:
+ *       201:
+ *         description: Canal criado
  */
 app.post('/api/channels', authenticateToken, async (req, res) => {
   try {
@@ -269,20 +261,20 @@ app.post('/api/channels', authenticateToken, async (req, res) => {
 /**
  * @swagger
  * /api/messages/{channelId}:
- * get:
- * summary: Obtém histórico de mensagens
- * tags: [Mensagens]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: channelId
- * required: true
- * schema:
- * type: string
- * responses:
- * 200:
- * description: Lista de mensagens
+ *   get:
+ *     summary: Obtém histórico de mensagens
+ *     tags: [Mensagens]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: channelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de mensagens
  */
 app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
   try {
@@ -299,29 +291,28 @@ app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
 /**
  * @swagger
  * /api/messages/{channelId}:
- * post:
- * summary: Envia uma nova mensagem
- * tags: [Mensagens]
- * security:
- * - bearerAuth: []
- * parameters:
- * - in: path
- * name: channelId
- * required: true
- * schema:
- * type: string
- * requestBody:
- * required: true
- * content:
- * application/json:
- * schema:
- * type: object
- * properties:
- * text:
- * type: string
- * responses:
- * 201:
- * description: Mensagem enviada
+ *   post:
+ *     summary: Envia uma nova mensagem
+ *     tags: [Mensagens]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: channelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text: { type: string }
+ *     responses:
+ *       201:
+ *         description: Mensagem enviada
  */
 app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
   try {
@@ -355,8 +346,8 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('join_channel', (id) => { socket.join(id); });
-  socket.on('join_stream', (id) => { socket.join(id); });
+  socket.on('join_channel', (id) => socket.join(id));
+  socket.on('join_stream', (id) => socket.join(id));
 });
 
 // ============================================
