@@ -187,7 +187,7 @@ app.post('/api/auth/register', async (req, res) => {
  * type: string
  * responses:
  * 200:
- * description: Sucesso
+ * description: Login efetuado com sucesso
  */
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -211,11 +211,46 @@ app.post('/api/auth/login', async (req, res) => {
 // ROTAS: CANAIS
 // ============================================
 
+/**
+ * @swagger
+ * /api/channels:
+ * get:
+ * summary: Lista todos os canais
+ * tags: [Canais]
+ * security:
+ * - bearerAuth: []
+ * responses:
+ * 200:
+ * description: Lista de canais obtida
+ */
 app.get('/api/channels', authenticateToken, async (req, res) => {
   const channels = await Channel.find().populate('createdBy', 'name');
   res.json({ channels });
 });
 
+/**
+ * @swagger
+ * /api/channels:
+ * post:
+ * summary: Cria um novo canal
+ * tags: [Canais]
+ * security:
+ * - bearerAuth: []
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * name:
+ * type: string
+ * description:
+ * type: string
+ * responses:
+ * 201:
+ * description: Canal criado
+ */
 app.post('/api/channels', authenticateToken, async (req, res) => {
   try {
     const channel = new Channel({ ...req.body, createdBy: req.user.id, members: [req.user.id] });
@@ -231,6 +266,24 @@ app.post('/api/channels', authenticateToken, async (req, res) => {
 // ROTAS: MENSAGENS
 // ============================================
 
+/**
+ * @swagger
+ * /api/messages/{channelId}:
+ * get:
+ * summary: Obtém histórico de mensagens
+ * tags: [Mensagens]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: channelId
+ * required: true
+ * schema:
+ * type: string
+ * responses:
+ * 200:
+ * description: Lista de mensagens
+ */
 app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
   try {
     const messages = await Message.find({ channel: req.params.channelId })
@@ -243,6 +296,33 @@ app.get('/api/messages/:channelId', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/messages/{channelId}:
+ * post:
+ * summary: Envia uma nova mensagem
+ * tags: [Mensagens]
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: channelId
+ * required: true
+ * schema:
+ * type: string
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * text:
+ * type: string
+ * responses:
+ * 201:
+ * description: Mensagem enviada
+ */
 app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
   try {
     const message = new Message({
@@ -256,84 +336,6 @@ app.post('/api/messages/:channelId', authenticateToken, async (req, res) => {
     res.status(201).json({ message });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao enviar mensagem' });
-  }
-});
-
-// ============================================
-// ROTAS: STREAMS
-// ============================================
-
-app.get('/api/streams', authenticateToken, async (req, res) => {
-  try {
-    const streams = await Stream.find(req.query.status ? { status: req.query.status } : {})
-      .populate('host', 'name')
-      .sort({ scheduledDate: -1 });
-    res.json({ streams });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao listar streams' });
-  }
-});
-
-app.post('/api/streams', authenticateToken, async (req, res) => {
-  try {
-    const stream = new Stream({ ...req.body, host: req.user.id });
-    await stream.save();
-    await stream.populate('host', 'name');
-    io.emit('stream_scheduled', { stream });
-    res.status(201).json({ stream });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar stream' });
-  }
-});
-
-app.post('/api/streams/:id/start', authenticateToken, async (req, res) => {
-  try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
-    if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
-
-    stream.status = 'live';
-    stream.startedAt = new Date();
-    await stream.save();
-
-    io.emit('stream_started', { streamId: stream._id, stream });
-    res.json({ message: 'Stream iniciada', stream });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao iniciar stream' });
-  }
-});
-
-app.post('/api/streams/:id/end', authenticateToken, async (req, res) => {
-  try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
-    if (stream.host.toString() !== req.user.id) return res.status(403).json({ error: 'Não autorizado' });
-
-    stream.status = 'ended';
-    stream.endedAt = new Date();
-    await stream.save();
-
-    io.emit('stream_ended', { streamId: stream._id });
-    res.json({ message: 'Stream encerrada', stream });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao encerrar' });
-  }
-});
-
-app.post('/api/streams/:id/join', authenticateToken, async (req, res) => {
-  try {
-    const stream = await Stream.findById(req.params.id);
-    if (!stream) return res.status(404).json({ error: 'Stream não encontrada' });
-
-    if (!stream.viewers.includes(req.user.id)) {
-      stream.viewers.push(req.user.id);
-      await stream.save();
-    }
-    
-    io.to(req.params.id).emit('viewer_joined', { streamId: stream._id, viewers: stream.viewers.length });
-    res.json({ message: 'Entrou na stream', stream });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao entrar' });
   }
 });
 
