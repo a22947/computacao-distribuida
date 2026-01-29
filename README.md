@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # **🎥 StreamPro Enterprise \- Sistema de Chat Distribuído**
 
 Este projeto foi desenvolvido para a unidade curricular de **Computação Distribuída**. Consiste numa plataforma de streaming e chat empresarial que utiliza uma arquitetura baseada em micro serviços, garantindo escalabilidade e comunicação em tempo real através de WebSockets.
@@ -88,10 +87,7 @@ Na raiz do projeto (onde está o ficheiro `docker-compose.yml`), executa o segui
 ```
 docker-compose up --build -d
 ```
->>>>>>> 57ef61c739ace6b30a8df10c488cab9ded9acf87
 
-
-<<<<<<< HEAD
 * O servidor Node.js em `http://localhost:3000`.  
 * A base de dados MongoDB na porta `27017`.  
 * O serviço Redis na porta `6379`.
