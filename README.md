@@ -96,9 +96,11 @@ docker-compose up --build -d
 
 Navega até à pasta `frontend` e instala as dependências:
 
+```
 Bash  
 cd frontend  
 npm install
+```
 
 Inicia o servidor de desenvolvimento:
 
@@ -190,4 +192,3 @@ A correção da sintaxe YAML no Swagger e a garantia de que o Frontend (React) c
 
 
 ---
->>>>>>> 57ef61c739ace6b30a8df10c488cab9ded9acf87
