@@ -1,8 +1,8 @@
 services:
   # Servidor Backend (Node.js + Express + WebSockets)
   backend:
+    container_name: streampro_backend
     build: ./backend
-    container_name: backend_server
     ports:
       - "3000:3000"
     environment:
@@ -14,20 +14,32 @@ services:
     depends_on:
       - mongodb
       - redis
-
-  # Infraestrutura NoSQL (Principal)
+# --- FRONTEND (React + Vite) ---
+  frontend:
+    container_name: streampro_frontend
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true # Essencial para o Windows atualizar em tempo real
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+  # --- Infraestrutura de Base de Dados NoSQL(MongoDB) ---
   mongodb:
     image: mongo:latest
-    container_name: mongodb_container
+    container_name: streampro_mongo
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
 
-  # Infraestrutura de Cache (Ponto Extra: Múltiplas BDs)
+  # --- Infraestrutura de Cache (Redis) ---
   redis:
     image: redis:alpine
-    container_name: redis_container
+    container_name: streampro_redis
     ports:
       - "6379:6379"
 
