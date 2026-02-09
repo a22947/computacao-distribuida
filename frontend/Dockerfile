@@ -1,5 +1,5 @@
 # Usa uma imagem leve do Node.js
-FROM node:18-alpine
+FROM node:22-alpine
 
 # Define a pasta de trabalho dentro do contentor
 WORKDIR /app
