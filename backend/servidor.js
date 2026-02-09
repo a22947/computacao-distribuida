@@ -17,9 +17,21 @@ const swaggerJsdoc = require('swagger-jsdoc');
 
 // CONFIGURAÇÕES GERAIS
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_distribuida';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/streaming_chat';
+const PORT = process.env.PORT || 3000;
+
+// Validação de Segurança: O servidor não arranca se faltarem segredos
+if (!process.env.JWT_SECRET) {
+  console.error('❌ ERRO FATAL: A variável JWT_SECRET não está definida.');
+  process.exit(1);
+}
+if (!process.env.MONGODB_URI) {
+  console.error('❌ ERRO FATAL: A variável MONGODB_URI não está definida.');
+  process.exit(1);
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const MONGODB_URI = process.env.MONGODB_URI;
+const REDIS_HOST = process.env.REDIS_HOST || 'redis'; // O Redis Host também deve vir do ambiente
 
 // ============================================
 // CONFIGURAÇÃO SWAGGER

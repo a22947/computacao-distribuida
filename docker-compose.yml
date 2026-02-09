@@ -4,16 +4,20 @@ services:
     container_name: streampro_backend
     build: ./backend
     ports:
-      - "3000:3000"
+      - "${PORT}:${PORT}"
     environment:
       # Ligação ao serviço "mongodb" em vez de "localhost"
       - MONGODB_URI=mongodb://mongodb:27017/streaming_chat
-      - REDIS_HOST=redis
-      - JWT_SECRET=chave_secreta_super_segura
-      - PORT=3000
+      - REDIS_HOST=${REDIS_HOST}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
     depends_on:
       - mongodb
       - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      
 # --- FRONTEND (React + Vite) ---
   frontend:
     container_name: streampro_frontend
